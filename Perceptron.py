@@ -8,7 +8,8 @@ class Perceptron(ABC):
     """
     Abstract class for different perceptron training methods.
 
-    This class has a number of subclasses intended to override the train method.
+    This class has a number of subclasses intended to override the 
+    train method.
 
     Attributes:
         W: a numpy array representing the weight vector
@@ -21,7 +22,8 @@ class Perceptron(ABC):
         """
         Constructor for Perceptron class.
 
-        Accepts basic information for the perceptron and initializes the instance variables.
+        Accepts basic information for the perceptron and initializes 
+        the instance variables.
 
         Args:
             num_features: the number of data features
@@ -50,13 +52,11 @@ class Perceptron(ABC):
         Tests the perceptron on a given data and label set.
 
         Args:
-            test_data: the number of data features
-            lr: the learning rate
-            epochs: the number of training epochs
+            test_data: the test data
+            test_labels: the corresponding test label array
 
         Returns:
-            A tuple where the first entry is the Perceptron weight and 
-            the second is the bias.
+            The accuracy from running the perceptron on a given dataset
         """
         num_examples = test_data.shape[0]
         misclassifications = 0
@@ -89,7 +89,7 @@ class Perceptron(ABC):
         """
         x = list(self.accuracies.keys())
         y = list(self.accuracies.values())
-        
+
         plt.plot(x,y)
         plt.xlabel("Epoch")
         plt.ylabel("Dev Set Accuracy")
@@ -97,10 +97,41 @@ class Perceptron(ABC):
         plt.show()
 
 class SimplePerceptron(Perceptron):
+    """
+    A Perceptron subclass that implements a simple perceptron.
+
+    This class inherits most methods from Perceptron abstract class.
+    It overrides the train method.
+    """
     def __init__(self, num_features, lr=.01, epochs=10):
-        super(SimplePerceptron, self).__init__(num_features, lr, epochs)
+        """
+        Constructor for SimplePerceptron class.
+
+        Accepts basic information for the simple perceptron and 
+        instantiates according to the Perceptron abstract. 
+
+        Args:
+            num_features: the number of data features
+            lr: the learning rate which defaults to .01
+            epochs: the number of training epochs which defaults 10
+        """
+        super(SimplePerceptron, self).__init__(num_features, 
+                                               lr, epochs)
         
     def train(self, train_data, train_labels, dev_data, dev_labels):
+        """
+        Trains a simple perceptron on a given data and label set.
+
+        Args:
+            train_data: the train data
+            train_labels: the corresponding trian label array
+            dev_data: the validation data
+            dev_labels: the corresponding validation label array
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and 
+            the second is the bias.
+        """
         num_examples = train_data.shape[0]
         
         best_accuracy = [0, [], 0]
@@ -114,8 +145,86 @@ class SimplePerceptron(Perceptron):
                 predicted_label = self.W.T.dot(example) + self.bias
                 
                 if (actual_label * predicted_label) < 0:
-                    self.W = self.W + (self.lr * actual_label * example)
+                    self.W = self.W + (self.lr * actual_label \
+                                       * example)
                     self.bias = self.bias + (self.lr * actual_label)
+                    
+                    misclassifications += 1
+            
+            if misclassifications == 0:
+                print("epoch", epoch, 
+                    "completed with perfect accuracy.")
+                return (self.W, self.bias)
+            else:
+                accuracy = 
+                    (num_examples - misclassifications)/num_examples
+                self.accuracies[epoch] = accuracy
+
+                if accuracy > best_accuracy[0]:
+                    best_accuracy[0] = accuracy
+                    best_accuracy[1] = self.W
+                    best_accuracy[2] = self.bias
+                print("epoch", epoch, "complete with accuracy", 
+                      accuracy, ".")
+        self.W = best_accuracy[1]
+        self.bias = best_accuracy[2]
+        return (self.W, self.bias)
+
+class DynamicPerceptron(Perceptron):
+    """
+    A Perceptron subclass that implements a dynamic perceptron.
+
+    This class inherits most methods from Perceptron abstract class.
+    It overrides the train method.
+    """
+    def __init__(self, num_features, lr=.01, epochs=10):
+        """
+        Constructor for DynamicPerceptron class.
+
+        Accepts basic information for the simple perceptron and 
+        instantiates according to the Perceptron abstract. 
+
+        Args:
+            num_features: the number of data features
+            lr: the learning rate which defaults to .01
+            epochs: the number of training epochs which defaults 10
+        """
+        super(DynamicPerceptron, self).__init__(num_features, lr, 
+                                                epochs)
+        
+    def train(self, train_data, train_labels):
+        """
+        Trains a dynamic perceptron on a given data and label set.
+
+        Args:
+            train_data: the train data
+            train_labels: the corresponding trian label array
+            dev_data: the validation data
+            dev_labels: the corresponding validation label array
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and 
+            the second is the bias.
+        """
+        timestep = 0
+        num_examples = train_data.shape[0]
+        
+        best_accuracy = [0, [], 0]
+        
+        for epoch in range(self.epochs):
+            misclassifications = 0
+            
+            for i in range(num_examples):
+                example = train_data[i]
+                actual_label = train_labels[i]
+                predicted_label = self.W.T.dot(example) + self.bias
+                
+                if (actual_label * predicted_label) < 0:
+                    adjusted_lr = self.lr/(1+timestep)
+                    self.W = self.W + (adjusted_lr * actual_label 
+                                       * example)
+                    self.bias = self.bias + (adjusted_lr 
+                                             * actual_label)
                     
                     misclassifications += 1
             
@@ -123,15 +232,16 @@ class SimplePerceptron(Perceptron):
                 print("epoch", epoch, "completed with 100% accuracy.")
                 return (self.W, self.bias)
             else:
-                accuracy = (num_examples - misclassifications)/num_examples
+                timestep += 1 
+                accuracy = (num_examples - misclassifications) \
+                            / num_examples
                 self.accuracies[epoch] = accuracy
                 if accuracy > best_accuracy[0]:
                     best_accuracy[0] = accuracy
                     best_accuracy[1] = self.W
                     best_accuracy[2] = self.bias
-                print("epoch", epoch, "complete with accuracy", accuracy, ".")
+                print("epoch", epoch, "complete with accuracy", 
+                      accuracy, ".")
         self.W = best_accuracy[1]
         self.bias = best_accuracy[2]
         return (self.W, self.bias)
-
-x = SimplePerceptron(100, .001, 100)
