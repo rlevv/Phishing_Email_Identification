@@ -8,43 +8,62 @@ class Perceptron(ABC):
     """
     Abstract class for different perceptron training methods.
 
+    This class has a number of subclasses intended to override the train method.
+
     Attributes:
-        W           (numpy.ndarray):    weight vector
-        bias        (float):            bias
-        epochs      (int):              number of training epochs
-        lr          (float):            learning rate
-        accuracies  (list):             list of accuracies for each epoch
+        W: a numpy array representing the weight vector
+        bias: the bias
+        epochs: the number of training epochs
+        lr: the learning rate
+        accuracies: a list of accuracies for each epoch
     """
     def __init__(self, num_features, lr, epochs):
         """
         Constructor for Perceptron class.
 
-        Parameters:
-            num_features    (int):      number of data features
-            lr              (float):    learning rate
-            epochs          (int):      number of training epochs
+        Accepts basic information for the perceptron and initializes the instance variables.
+
+        Args:
+            num_features: the number of data features
+            lr: the learning rate
+            epochs: the number of training epochs
         """
         self.W = np.random.uniform(-.01,.01,num_features) 
         self.bias = random.uniform(-.01,.01)
         self.epochs = epochs
         self.lr = lr
-        
-        # Class variable for storing accuracies generated at each epoch
+
         self.accuracies = {}
-    
-    # Printing a per
+
     def __repr__(self):
         """
-        Print function for 
+        Print function for Perceptron.
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and 
+            the second is the bias.
         """
         return (self.W, self.bias)
     
     def test(self, test_data, test_labels):
+        """
+        Tests the perceptron on a given data and label set.
+
+        Args:
+            test_data: the number of data features
+            lr: the learning rate
+            epochs: the number of training epochs
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and 
+            the second is the bias.
+        """
+        num_examples = test_data.shape[0]
         misclassifications = 0
 
-        for i in range(train_data.shape[0]):
-            example = train_data[i]
-            actual_label = train_labels[i]
+        for i in range(num_examples):
+            example = test_data[i]
+            actual_label = test_labels[i]
             predicted_label = self.W.T.dot(example) + self.bias
             
             if (actual_label * predicted_label) < 0:
@@ -59,11 +78,18 @@ class Perceptron(ABC):
     
     @abstractmethod
     def train(self):
+        """
+        Abstract method to be overridden in subclasses
+        """
         pass
     
     def graph(self):
-        x = list(accuracies_dict.keys())
-        y = list(accuracies_dict.values())
+        """
+        Graphs the accuracy across the epochs
+        """
+        x = list(self.accuracies.keys())
+        y = list(self.accuracies.values())
+        
         plt.plot(x,y)
         plt.xlabel("Epoch")
         plt.ylabel("Dev Set Accuracy")
@@ -107,3 +133,5 @@ class SimplePerceptron(Perceptron):
         self.W = best_accuracy[1]
         self.bias = best_accuracy[2]
         return (self.W, self.bias)
+
+x = SimplePerceptron(100, .001, 100)
