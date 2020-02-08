@@ -155,9 +155,9 @@ class SimplePerceptron(Perceptron):
                 print("epoch", epoch, "completed with perfect \
                       accuracy.")
                 return (self.W, self.bias)
+            
             else:
-                accuracy = ((num_examples - misclassifications) \ 
-                            / num_examples)
+                accuracy = ((num_examples - misclassifications))
                 self.accuracies[epoch] = accuracy
 
                 if accuracy > best_accuracy[0]:
