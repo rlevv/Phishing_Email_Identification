@@ -108,7 +108,7 @@ class SimplePerceptron(Perceptron):
         Constructor for SimplePerceptron class.
 
         Accepts basic information for the simple perceptron and 
-        instantiates according to the Perceptron abstract. 
+        instantiates according to the Perceptron abstract class. 
 
         Args:
             num_features: the number of data features
@@ -118,15 +118,13 @@ class SimplePerceptron(Perceptron):
         super(SimplePerceptron, self).__init__(num_features, 
                                                lr, epochs)
         
-    def train(self, train_data, train_labels, dev_data, dev_labels):
+    def train(self, train_data, train_labels):
         """
         Trains a simple perceptron on a given data and label set.
 
         Args:
             train_data: the train data
             train_labels: the corresponding trian label array
-            dev_data: the validation data
-            dev_labels: the corresponding validation label array
 
         Returns:
             A tuple where the first entry is the Perceptron weight and 
@@ -157,7 +155,8 @@ class SimplePerceptron(Perceptron):
                 return (self.W, self.bias)
             
             else:
-                accuracy = ((num_examples - misclassifications))
+                accuracy = ((num_examples - misclassifications) \
+                             / num_examples)
                 self.accuracies[epoch] = accuracy
 
                 if accuracy > best_accuracy[0]:
@@ -182,7 +181,7 @@ class DynamicPerceptron(Perceptron):
         Constructor for DynamicPerceptron class.
 
         Accepts basic information for the simple perceptron and 
-        instantiates according to the Perceptron abstract. 
+        instantiates according to the Perceptron abstract class. 
 
         Args:
             num_features: the number of data features
@@ -199,8 +198,6 @@ class DynamicPerceptron(Perceptron):
         Args:
             train_data: the train data
             train_labels: the corresponding trian label array
-            dev_data: the validation data
-            dev_labels: the corresponding validation label array
 
         Returns:
             A tuple where the first entry is the Perceptron weight and
@@ -248,11 +245,40 @@ class DynamicPerceptron(Perceptron):
         return (self.W, self.bias)
 
 class AveragedPerceptron(Perceptron):
+    """
+    A Perceptron subclass that implements an averaged perceptron.
+
+    This class inherits most methods from Perceptron abstract class.
+    It overrides the train method.
+    """
     def __init__(self, num_features, margin=.01, lr=.01,  epochs=10):
+        """
+        Constructor for AveragedPerceptron class.
+
+        Accepts basic information for the simple perceptron and 
+        instantiates a margin and the rest according to the 
+        Perceptron abstract class. 
+
+        Args:
+            num_features: the number of data features
+            margin: the perceptron margin defaults to .01
+            lr: the learning rate which defaults to .01
+            epochs: the number of training epochs which defaults 10
+        """
         super(AveragedPerceptron, self).__init__(num_features, lr, epochs)
         
     def train(self, train_data, train_labels):
-        
+        """
+        Trains an averaged perceptron on a given data and label set.
+
+        Args:
+            train_data: the train data
+            train_labels: the corresponding trian label array
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and
+            the second is the bias.
+        """
         timestep = 1
         num_examples = train_data.shape[0]
         
@@ -300,12 +326,44 @@ class AveragedPerceptron(Perceptron):
         return (self.W, self.bias)
 
 class AggressiveMarginPerceptron(Perceptron):
+    """
+    A Perceptron subclass that implements an aggressive margin 
+    perceptron.
+
+    This class inherits most methods from Perceptron abstract class.
+    It overrides the train method.
+    """
     def __init__(self, num_features, margin=.01, lr=.01,  epochs=10):
+        """
+        Constructor for AggressiveMarginPerceptron class.
+
+        Accepts basic information for the simple perceptron and 
+        instantiates a margin and the rest according to the 
+        Perceptron abstract class. 
+
+        Args:
+            num_features: the number of data features
+            margin: the perceptron margin defaults to .01
+            lr: the learning rate which defaults to .01
+            epochs: the number of training epochs which defaults 10
+        """
         super(AggressiveMarginPerceptron, self).__init__(num_features,
                                                          lr, epochs)
         self.margin = margin
         
     def train(self, train_data, train_labels):
+        """
+        Trains an aggressive margin perceptron on a given data and
+        label set.
+
+        Args:
+            train_data: the train data
+            train_labels: the corresponding trian label array
+
+        Returns:
+            A tuple where the first entry is the Perceptron weight and
+            the second is the bias.
+        """
         timestep = 1
         num_examples = train_data.shape[0]
         
