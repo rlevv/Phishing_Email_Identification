@@ -152,12 +152,12 @@ class SimplePerceptron(Perceptron):
                     misclassifications += 1
             
             if misclassifications == 0:
-                print("epoch", epoch, 
-                    "completed with perfect accuracy.")
+                print("epoch", epoch, "completed with perfect \
+                      accuracy.")
                 return (self.W, self.bias)
             else:
-                accuracy = 
-                    (num_examples - misclassifications)/num_examples
+                accuracy = ((num_examples - misclassifications) \ 
+                            / num_examples)
                 self.accuracies[epoch] = accuracy
 
                 if accuracy > best_accuracy[0]:
@@ -203,7 +203,7 @@ class DynamicPerceptron(Perceptron):
             dev_labels: the corresponding validation label array
 
         Returns:
-            A tuple where the first entry is the Perceptron weight and 
+            A tuple where the first entry is the Perceptron weight and
             the second is the bias.
         """
         timestep = 0
@@ -229,7 +229,8 @@ class DynamicPerceptron(Perceptron):
                     misclassifications += 1
             
             if misclassifications == 0:
-                print("epoch", epoch, "completed with 100% accuracy.")
+                print("epoch", epoch, "completed with perfect \
+                      accuracy.")
                 return (self.W, self.bias)
             else:
                 timestep += 1 
@@ -241,6 +242,108 @@ class DynamicPerceptron(Perceptron):
                     best_accuracy[1] = self.W
                     best_accuracy[2] = self.bias
                 print("epoch", epoch, "complete with accuracy", 
+                      accuracy, ".")
+        self.W = best_accuracy[1]
+        self.bias = best_accuracy[2]
+        return (self.W, self.bias)
+
+class AveragedPerceptron(Perceptron):
+    def __init__(self, num_features, margin=.01, lr=.01,  epochs=10):
+        super(AveragedPerceptron, self).__init__(num_features, lr, epochs)
+        
+    def train(self, train_data, train_labels):
+        
+        timestep = 1
+        num_examples = train_data.shape[0]
+        
+        averagedW = self.W
+        averagedBias = self.bias
+        
+        for epoch in range(self.epochs):
+            misclassifications = 0
+            
+            for i in range(num_examples):
+                example = train_data[i]
+                actual_label = train_labels[i]
+                predicted_label = self.W.T.dot(example) + self.bias
+                
+                if (actual_label * predicted_label) < 0:
+                    self.W = self.W + (self.lr * actual_label \
+                                       * example)
+                    self.bias = self.bias + (self.lr * actual_label)
+                    self.averagedW = averagedW + (self.lr \
+                                                  * actual_label \
+                                                  * example * timestep)
+                    self.averagedBias  = averagedBias + (actual_label \
+                                                         * timestep)
+                    misclassifications += 1
+            
+            if misclassifications == 0:
+                print("epoch", epoch, "completed with 100 perfect \
+                      accuracy.")
+                
+                self.W = self.W - ((1/timestep) * averagedW)
+                self.bias = self.bias - ((1/timestep) * averagedBias)
+                
+                return (self.W, self.bias)
+            else:
+                timestep += 1 
+                accuracy = ((num_examples - misclassifications) \
+                             / num_examples)
+                self.accuracies[epoch] = accuracy
+                print("epoch", epoch, "complete with accuracy", \
+                      accuracy, ".")
+        
+        self.W = self.W - ((1/timestep) * averagedW)
+        self.bias = self.bias - ((1/timestep) * averagedBias)
+        
+        return (self.W, self.bias)
+
+class AggressiveMarginPerceptron(Perceptron):
+    def __init__(self, num_features, margin=.01, lr=.01,  epochs=10):
+        super(AggressiveMarginPerceptron, self).__init__(num_features,
+                                                         lr, epochs)
+        self.margin = margin
+        
+    def train(self, train_data, train_labels):
+        timestep = 1
+        num_examples = train_data.shape[0]
+        
+        best_accuracy = [0, [], 0]
+        
+        for epoch in range(self.epochs):
+            misclassifications = 0
+            
+            for i in range(num_examples):
+                example = train_data[i]
+                actual_label = train_labels[i]
+                predicted_label = self.W.T.dot(example) + self.bias
+                
+                if (actual_label * predicted_label) < self.margin:
+                    adjusted_lr = ((self.margin - (actual_label \
+                                    * predicted_label)) \
+                                    / (example.T.dot(example) + 1))
+                    self.W = self.W + (adjusted_lr * actual_label \
+                                       * example)
+                    self.bias = self.bias + (adjusted_lr \
+                                             * actual_label)
+                    
+                    misclassifications += 1
+            
+            if misclassifications == 0:
+                print("epoch", epoch, "completed with 100 perfect \
+                      accuracy.")
+                return (self.W, self.bias)
+            else:
+                timestep += 1 
+                accuracy = ((num_examples - misclassifications) \
+                             / num_examples)
+                self.accuracies[epoch] = accuracy
+                if accuracy > best_accuracy[0]:
+                    best_accuracy[0] = accuracy
+                    best_accuracy[1] = self.W
+                    best_accuracy[2] = self.bias
+                print("epoch", epoch, "complete with accuracy", \
                       accuracy, ".")
         self.W = best_accuracy[1]
         self.bias = best_accuracy[2]
