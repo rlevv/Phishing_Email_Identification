@@ -46,7 +46,7 @@ class Perceptron(ABC):
             the second is the bias.
         """
         return (self.W, self.bias)
-    
+
     def test(self, test_data, test_labels):
         """
         Tests the perceptron on a given data and label set.
@@ -59,21 +59,17 @@ class Perceptron(ABC):
             The accuracy from running the perceptron on a given dataset
         """
         num_examples = test_data.shape[0]
-        misclassifications = 0
 
-        for i in range(num_examples):
-            example = test_data[i]
-            actual_label = test_labels[i]
+        misclassifications = 0
+        for index, row in test_data.iterrows():
+            example = np.asarray(row)
+            label = test_labels.iat[index,0]
             predicted_label = self.W.T.dot(example) + self.bias
             
-            if (actual_label * predicted_label) < 0:
-                self.W = self.W + (self.lr * actual_label * example)
-                self.bias = self.bias + (self.lr * actual_label)
-                    
+            if (label * predicted_label) < 0:
                 misclassifications += 1
         
-        accuracy = (num_examples - misclassifications)/num_examples
-        print("accuracy on test set is", accuracy, ".")
+        accuracy = ((num_examples - misclassifications) / num_examples)
         return accuracy
     
     @abstractmethod
@@ -130,43 +126,36 @@ class SimplePerceptron(Perceptron):
             A tuple where the first entry is the Perceptron weight and 
             the second is the bias.
         """
-        num_examples = train_data.shape[0]
         
-        best_accuracy = [0, [], 0]
+        initial_accuracy = self.test(train_data, train_labels)
+        
+        print("Initial random weights accuracy is ", initial_accuracy,
+              ".")
+
+        num_examples = train_data.shape[0]
         
         for epoch in range(self.epochs):
             misclassifications = 0
-            
-            for i in range(num_examples):
-                example = train_data[i]
-                actual_label = train_labels[i]
+            for index, row in train_data.iterrows():
+                example = np.asarray(row)
+                label = train_labels.iat[index,0]
                 predicted_label = self.W.T.dot(example) + self.bias
-                
-                if (actual_label * predicted_label) < 0:
-                    self.W = self.W + (self.lr * actual_label \
+                if (label * predicted_label) < 0:
+                    self.W = self.W + (self.lr * label \
                                        * example)
-                    self.bias = self.bias + (self.lr * actual_label)
-                    
+                    self.bias = self.bias + (self.lr * label)
                     misclassifications += 1
-            
             if misclassifications == 0:
                 print("epoch", epoch, "completed with perfect \
                       accuracy.")
                 return (self.W, self.bias)
-            
             else:
                 accuracy = ((num_examples - misclassifications) \
                              / num_examples)
                 self.accuracies[epoch] = accuracy
 
-                if accuracy > best_accuracy[0]:
-                    best_accuracy[0] = accuracy
-                    best_accuracy[1] = self.W
-                    best_accuracy[2] = self.bias
                 print("epoch", epoch, "complete with accuracy", 
-                      accuracy, ".")
-        self.W = best_accuracy[1]
-        self.bias = best_accuracy[2]
+                      accuracy, "on training set.")
         return (self.W, self.bias)
 
 class DynamicPerceptron(Perceptron):
