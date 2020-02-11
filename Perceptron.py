@@ -34,8 +34,8 @@ class Perceptron(ABC):
         self.bias = random.uniform(-.01,.01)
         self.epochs = epochs
         self.lr = lr
-
-        self.accuracies = {}
+        self.accuracies = [[x for x in range(epochs + 1)] 
+                                for y in range(3)]
 
     def __repr__(self):
         """
@@ -83,13 +83,16 @@ class Perceptron(ABC):
         """
         Graphs the accuracy across the epochs
         """
-        x = list(self.accuracies.keys())
-        y = list(self.accuracies.values())
+        x = self.accuracies[0]
+        y1 = self.accuracies[1]
+        y2 = self.accuracies[2]
 
-        plt.plot(x,y)
+        plt.plot(x, y1, color='blue', label = "Training Set")
+        plt.plot(x, y2, color='red', label = "Dev Set")
         plt.xlabel("Epoch")
-        plt.ylabel("Dev Set Accuracy")
-        plt.title("Dev Set Accuracy Across Epochs")
+        plt.ylabel("Accuracy")
+        plt.title("Accuracy Across Epochs")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
         plt.show()
 
 class SimplePerceptron(Perceptron):
@@ -114,7 +117,7 @@ class SimplePerceptron(Perceptron):
         super(SimplePerceptron, self).__init__(num_features, 
                                                lr, epochs)
         
-    def train(self, train_data, train_labels):
+    def train(self, train_data, train_labels, dev_data, dev_labels):
         """
         Trains a simple perceptron on a given data and label set.
 
@@ -126,11 +129,11 @@ class SimplePerceptron(Perceptron):
             A tuple where the first entry is the Perceptron weight and 
             the second is the bias.
         """
-        
-        initial_accuracy = self.test(train_data, train_labels)
-        
-        print("Initial random weights accuracy is ", initial_accuracy,
-              ".")
+        initial_train_accuracy = self.test(train_data, train_labels)
+        initial_dev_accuracy = self.test(dev_data, dev_labels)
+
+        self.accuracies[1][0] = initial_train_accuracy
+        self.accuracies[2][0] = initial_dev_accuracy
 
         num_examples = train_data.shape[0]
         
@@ -145,17 +148,14 @@ class SimplePerceptron(Perceptron):
                                        * example)
                     self.bias = self.bias + (self.lr * label)
                     misclassifications += 1
-            if misclassifications == 0:
-                print("epoch", epoch, "completed with perfect \
-                      accuracy.")
-                return (self.W, self.bias)
-            else:
-                accuracy = ((num_examples - misclassifications) \
-                             / num_examples)
-                self.accuracies[epoch] = accuracy
 
-                print("epoch", epoch, "complete with accuracy", 
-                      accuracy, "on training set.")
+            train_accuracy = ((num_examples - misclassifications) \
+                             / num_examples)
+            dev_accuracy = self.test(dev_data, dev_labels)
+            
+            self.accuracies[1][epoch+1] = train_accuracy
+            self.accuracies[2][epoch+1] = dev_accuracy
+
         return (self.W, self.bias)
 
 class DynamicPerceptron(Perceptron):
